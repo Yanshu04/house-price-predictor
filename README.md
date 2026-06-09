@@ -77,7 +77,7 @@ Success response:
 
 ```json
 {
-  "price": "$215,000"
+  "price": "$176,140"
 }
 ```
 
