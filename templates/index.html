@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #1a202c;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: #4f46e5;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            padding: 0;
+            border: none;
+            accent-color: #4f46e5;
+        }
+
+        .slider-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #4f46e5;
+            width: 24px;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #4338ca;
+        }
+
+        .result {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-label {
+            font-size: 13px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .result-price {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>House Price Predictor</h1>
+        <p class="subtitle">Enter details below to estimate the sale price</p>
+
+        <div class="form-group">
+            <label>Overall Quality</label>
+            <div class="slider-row">
+                <input type="range" id="overall_qual" min="1" max="10" value="5"
+                    oninput="document.getElementById('qual_val').textContent = this.value">
+                <span class="slider-value" id="qual_val">5</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Living Area (sqft)</label>
+            <input type="number" id="gr_liv_area" value="1500" min="300" max="6000">
+        </div>
+
+        <div class="form-group">
+            <label>Garage Capacity (cars)</label>
+            <div class="slider-row">
+                <input type="range" id="garage_cars" min="0" max="4" value="2"
+                    oninput="document.getElementById('garage_val').textContent = this.value">
+                <span class="slider-value" id="garage_val">2</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Basement Area (sqft)</label>
+            <input type="number" id="total_bsmt" value="800" min="0" max="3000">
+        </div>
+
+        <div class="form-group">
+    <label>Year Built</label>
+    <input type="number" id="year_built" value="2000" min="1872" max="2010">
+    <small style="color: #718096; font-size: 12px;">Valid range: 1872 – 2010</small>
+</div>
+
+        <button onclick="predict()">Predict Price</button>
+
+        <div class="result" id="result">
+            <div class="result-label">Estimated Sale Price</div>
+            <div class="result-price" id="price">—</div>
+        </div>
+    </div>
+
+    <script>
+       async function predict() {
+    const data = {
+        overall_qual: document.getElementById('overall_qual').value,
+        gr_liv_area: document.getElementById('gr_liv_area').value,
+        garage_cars: document.getElementById('garage_cars').value,
+        total_bsmt: document.getElementById('total_bsmt').value,
+        year_built: document.getElementById('year_built').value
+    };
+
+    const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+    
+    if (result.error) {
+        document.getElementById('price').textContent = '—';
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('result').style.background = '#fff0f0';
+        document.getElementById('price').style.color = '#e53e3e';
+        document.getElementById('price').style.fontSize = '16px';
+        document.getElementById('price').textContent = result.error;
+    } else {
+        document.getElementById('result').style.background = '#f0f4ff';
+        document.getElementById('price').style.color = '#4f46e5';
+        document.getElementById('price').style.fontSize = '36px';
+        document.getElementById('price').textContent = result.price;
+        document.getElementById('result').style.display = 'block';
+    }
+}
+    </script>
+</body>
+</html>
